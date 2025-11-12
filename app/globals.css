@@ -1,0 +1,153 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap");
+@import "tailwindcss";
+
+:root {
+  /* COLORS */
+  --primary: hsl(0 100% 30%);
+  --primary-95: hsl(0 100% 35%);
+  --bg-dark: hsl(211 70% 10%);
+  --bg: hsl(211 70% 20%);
+  --bg-light: hsl(211 70% 30%);
+  --bg-lighter: hsl(211 70% 40%);
+  --text: oklch(0.96 0 264);
+  --text-muted: oklch(0.76 0 264);
+
+  /* TYPOGRAPHY */
+  --ff: "Inter", sans-serif;
+  --h1: bold 4rem/1em var(--ff);
+  --h2: bold 3rem/1.2em var(--ff);
+  --h3: bold 2.25rem/1.2em var(--ff);
+  --h4: bold 1.5rem/1.6em var(--ff);
+  --big: 1.25rem/1.6em var(--ff);
+  --p: 1rem/1.6em var(--ff);
+  --small: 0.75rem/2em var(--ff);
+
+  /* shadows */
+  --shadow-s: inset 0 1px 2px #ffffff30, /* top highlight */ 0 1px 2px #00000030,
+    /* dark shadow */ 0 2px 4px #00000015; /* soft shadow */
+  --shadow-m: inset 0 1px 2px #ffffff50, /* top highlight */ 0 2px 4px #00000030,
+    /* dark shadow */ 0 4px 8px #00000015; /* soft shadow */
+  --shadow-l: inset 0 1px 2px #ffffff70, /* top highlight */ 0 4px 6px #00000030,
+    /* dark shadow */ 0 6px 10px #00000015; /* soft shadow */
+}
+:root.light {
+  --bg-dark: oklch(0.88 0 264);
+  --bg: oklch(0.92 0 264);
+  --bg-light: oklch(0.96 0 264);
+  --bg-lighter: oklch(1 0 264);
+  --text: oklch(0.15 0 264);
+  --text-muted: oklch(0.4 0 264);
+}
+body {
+  margin: 0;
+  font-family: var(--ff);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--bg-dark);
+  color: #fff;
+  overflow-x: hidden;
+}
+.title {
+  font: var(--h4);
+  transition-duration: 300ms;
+
+  @media (width >= 480px) {
+    font: var(--h3);
+  }
+  @media (width >= 710px) {
+    font: var(--h2);
+  }
+  @media (width >= 980px) {
+    font: var(--h1);
+  }
+}
+
+.btn-s {
+  font: bold var(--big);
+  border-radius: 2rem;
+  padding: 0.75rem 1.5rem;
+  transition-property: all;
+  transition-duration: 300ms;
+}
+.btn-l {
+  font: var(--h4);
+  border-radius: 2rem;
+  padding: 1rem 2rem;
+  transition-property: all;
+  transition-duration: 300ms;
+}
+.btn-sl {
+  font: bold var(--big);
+  border-radius: 2rem;
+  padding: 0.75rem 1.5rem;
+  transition-property: all;
+  transition-duration: 300ms;
+}
+.hero {
+  font: var(--h4);
+}
+@media ((min-height: 840px) and (min-width: 768px)) {
+  .hero {
+    font: var(--h2);
+  }
+}
+@media (min-width: 768px) {
+  .btn-sl {
+    font: var(--h4);
+    border-radius: 2rem;
+    padding: 1rem 2rem;
+    transition-property: all;
+    transition-duration: 300ms;
+  }
+}
+h1 {
+  font: var(--h2);
+}
+@media (min-width: 768px) {
+  h1 {
+    font: var(--h1);
+  }
+}
+h2 {
+  font: var(--h2);
+}
+h3 {
+  font: var(--h3);
+}
+h4 {
+  font: var(--h4);
+}
+p {
+  font: var(--p);
+}
+.p-med {
+  font: 500 var(--p);
+}
+.p-bold {
+  font: bold var(--p);
+}
+.big {
+  font: var(--big);
+}
+.link {
+  font: bold var(--p);
+}
+.small {
+  font: var(--small);
+}
+.shadow-s {
+  box-shadow: var(--shadow-s);
+}
+.shadow-m {
+  box-shadow: var(--shadow-m);
+}
+.shadow-l {
+  box-shadow: var(--shadow-l);
+}
+.shadow-sl {
+  box-shadow: var(--shadow-s);
+}
+.shadow-sl:hover,
+.shadow-sl.active {
+  box-shadow: var(--shadow-l);
+}
