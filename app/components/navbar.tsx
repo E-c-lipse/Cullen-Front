@@ -4,9 +4,9 @@ interface NavItem {
 }
 
 const items: NavItem[] = [
-  { label: "Home", to: "/" },
-  { label: "Redeem", to: "/redeem" },
-  { label: "Donate", to: "/donate" },
+  { label: "Inicio", to: "/" },
+  { label: "Canjear", to: "/redeem" },
+  { label: "Donar", to: "/donate" },
 ];
 
 export default function Navbar() {
