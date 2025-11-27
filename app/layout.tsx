@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "./components/navbar";
+import AuthGuard from "./components/AuthGuard";
 
 export const metadata: Metadata = {
   title: {
@@ -40,8 +41,8 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <Navbar></Navbar>
-        {children}
+        <Navbar />
+        <AuthGuard>{children}</AuthGuard>
       </body>
     </html>
   );

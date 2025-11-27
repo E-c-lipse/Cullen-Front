@@ -1,17 +1,82 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { api } from "./api";
+
+// Mapear tipos de sangre a IDs
+const bloodTypeMap: { [key: string]: number } = {
+  "O+": 1,
+  "O-": 2,
+  "A+": 3,
+  "A-": 4,
+  "B+": 5,
+  "B-": 6,
+  "AB+": 7,
+  "AB-": 8,
+};
 
 export default function DonationForm() {
+  const [userId, setUserId] = useState<number>(1);
   const [bloodAmount, setBloodAmount] = useState("");
   const [hospital, setHospital] = useState("");
+  const [bloodType, setBloodType] = useState("");
   const [confirmationCode, setConfirmationCode] = useState("");
+  const [hospitals, setHospitals] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: any) => {
+  useEffect(() => {
+    const id = parseInt(localStorage.getItem("user_id") || "1");
+    setUserId(id);
+  }, []);
+
+  useEffect(() => {
+    const loadHospitals = async () => {
+      try {
+        const hosp = await api.getHospitals();
+        setHospitals(hosp);
+        console.log("Hospitales cargados:", hosp.length);
+      } catch (error) {
+        console.error("Error loading hospitals:", error);
+      }
+    };
+    loadHospitals();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Aquí iría la lógica para enviar la donación
-    console.log({ bloodAmount, hospital, confirmationCode });
-    alert("Función de consulta activada. Verifica la consola.");
+    if (!bloodAmount || !hospital || !bloodType || !confirmationCode) {
+      alert("Por favor, completa todos los campos.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const bloodTypeId = bloodTypeMap[bloodType];
+      if (!bloodTypeId) {
+        alert("Tipo de sangre inválido.");
+        return;
+      }
+      const donationData = {
+        user_id: userId,
+        hospital_id: parseInt(hospital),
+        blood_type_id: bloodTypeId,
+        volume_ml: parseInt(bloodAmount),
+        donation_date: new Date().toISOString().split('T')[0],
+        donor_type: "voluntario", // Hardcodeado
+      };
+      const result = await api.createDonation(donationData);
+      console.log("Donación registrada para usuario ID:", userId, "en hospital ID:", hospital);
+      alert("Donación registrada exitosamente!");
+      // Reset form
+      setBloodAmount("");
+      setHospital("");
+      setBloodType("");
+      setConfirmationCode("");
+    } catch (error) {
+      console.error("Error creando donación:", error);
+      alert("Error registrando donación.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -41,7 +106,33 @@ export default function DonationForm() {
             />
           </div>
 
-          {/* Campo: Hospital (Selector) */}
+          {/* Campo: Tipo de sangre */}
+          <div>
+            <label
+              htmlFor="bloodType"
+              className="block text-sm font-medium text-white mb-2"
+            >
+              Tipo de sangre
+            </label>
+            <select
+              id="bloodType"
+              value={bloodType}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setBloodType(e.target.value)}
+              required
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-white appearance-none pr-10 focus:ring-red-500 focus:border-red-500 cursor-pointer transition duration-150"
+            >
+              <option value="" disabled>
+                Selecciona tipo
+              </option>
+              {Object.keys(bloodTypeMap).map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Campo: Hospital */}
           <div>
             <label
               htmlFor="hospital"
@@ -53,20 +144,20 @@ export default function DonationForm() {
               <select
                 id="hospital"
                 value={hospital}
-                onChange={(e) => setHospital(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setHospital(e.target.value)}
                 required
                 className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-white appearance-none pr-10 focus:ring-red-500 focus:border-red-500 cursor-pointer transition duration-150"
               >
                 <option value="" disabled>
                   Selecciona un hospital
                 </option>
-                <option value="dos_de_mayo">
-                  Hospital Nacional Dos de Mayo
-                </option>
-                <option value="cusco">Hospital Regional Cusco</option>
-                <option value="otro">Otro Hospital</option>
+                {hospitals.map((h: any) => (
+                  <option key={h.id} value={h.id}>
+                    {h.name}
+                  </option>
+                ))}
               </select>
-              {/* Icono de flecha para el selector */}
+              {/* Icono de flecha */}
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
                 <svg
                   className="w-5 h-5"
@@ -103,18 +194,18 @@ export default function DonationForm() {
             />
           </div>
 
-          {/* Botón de Consultar/Enviar */}
+          {/* Botón */}
           <div className="pt-4">
             <button
               type="submit"
+              disabled={loading}
               className="w-full bg-red-700 hover:bg-red-800 text-white font-semibold py-3 rounded-lg shadow-lg transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 focus:ring-offset-gray-900"
-              // Simulando el color rojo profundo del diseño
               style={{
                 backgroundColor: "#a81930",
                 boxShadow: "0 4px 10px rgba(168, 25, 48, 0.4)",
               }}
             >
-              Consultar
+              {loading ? "Registrando..." : "Registrar Donación"}
             </button>
           </div>
         </form>

@@ -1,37 +1,83 @@
-import Card from "./ui/card/card";
+"use client";
 
-const HistoryData = [
-  {
-    date: "15 de mayo de 2025",
-    type: "Donación",
-    hospital: "Hospital Nacional Dos de Mayo",
-    credits: "+170",
-    isPositive: true,
-  },
-  {
-    date: "20 de abril de 2025",
-    type: "Canje",
-    hospital: "Hospital Nacional Dos de Mayo",
-    credits: "-220",
-    isPositive: false,
-    img: "https://upload.wikimedia.org/wikipedia/commons/3/30/20180122_Dos_de_Mayo_03.jpg",
-  },
-  {
-    date: "10 de diciembre de 2024",
-    type: "Donación",
-    hospital: "Hospital Regional Cusco",
-    credits: "+400",
-    isPositive: true,
-  },
-];
+import { useEffect, useState } from "react";
+import Card from "./ui/card/card";
+import { api } from "./api";
+
+interface HistoryEntry {
+  timestamp: string;
+  entry_type: "donation" | "redemption";
+  hospital_name: string;
+  volume_ml: number;
+  credits_change: number;
+}
+
+interface UserSummary {
+  user_id: number;
+  name: string;
+  credits: number;
+  hospital_id: number;
+  hospital_name: string;
+  total_donations: number;
+  total_redemptions: number;
+}
 
 export default function Dashboard() {
+  const [userId, setUserId] = useState<number>(1);
+  const [summary, setSummary] = useState<UserSummary | null>(null);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedHospital, setSelectedHospital] = useState<number | null>(null);
+  const [hospitals, setHospitals] = useState<any[]>([]);
+
+  useEffect(() => {
+    const id = parseInt(localStorage.getItem("user_id") || "1");
+    setUserId(id);
+  }, []);
+
+  useEffect(() => {
+    if (userId === 1) return; // Wait for userId to be set
+    const loadData = async () => {
+      try {
+        const [summaryRes, historyRes, hospitalsRes] = await Promise.all([
+          api.getUserSummary(userId),
+          api.getUserHistory(userId, 10),
+          api.getHospitals(),
+        ]);
+        setSummary(summaryRes);
+        setHistory(historyRes.entries);
+        setHospitals(hospitalsRes);
+        console.log("Usuario cargado:", summaryRes.name); // Logging del nombre del usuario
+      } catch (error) {
+        console.error("Error loading dashboard data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, [userId]);
+
+  const handleHospitalChange = async () => {
+    if (!selectedHospital) return;
+    try {
+      await api.updateUserHospital(userId, selectedHospital);
+      console.log("Hospital cambiado exitosamente a ID:", selectedHospital);
+      // Recargar resumen
+      const summaryRes = await api.getUserSummary(userId);
+      setSummary(summaryRes);
+    } catch (error) {
+      console.error("Error updating hospital:", error);
+    }
+  };
+
+  if (loading) return <div>Loading...</div>;
+
   return (
     <div className="pt-[3.45rem] px-4">
       <div className="max-w-7xl mx-auto mt-5">
         <header className="grid md:grid-cols-4 gap-5 mb-10 items-center">
           <div className="col-span-3">
-            <h2 className="mb-4">Bienvenido, Harry</h2>
+            <h2 className="mb-4">Bienvenido, {summary?.name || "Usuario"}</h2>
             <p className="text-(--text-muted)">
               Aquí tienes un resumen de tu actividad reciente.
             </p>
@@ -39,7 +85,7 @@ export default function Dashboard() {
           <div className="bg-(--bg) shadow-s p-8 rounded-xl flex flex-col justify-between border border-(--bg-lighter)">
             <p className="text-(--text-muted)">Créditos totales</p>
             <div className="flex justify-between items-center mt-2">
-              <span className="text-5xl font-semibold">173</span>
+              <span className="text-5xl font-semibold">{summary?.credits || 0}</span>
               <i className="fa-solid fa-coins fa-2xl"></i>
             </div>
           </div>
@@ -60,26 +106,26 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody className="bg-(--bg) divide-y divide-(--bg-light)">
-                {HistoryData.map((item, index) => (
+                {history.map((item: HistoryEntry, index: number) => (
                   <tr
                     key={index}
                     className="hover:bg-(--bg-light) transition-all duration-300"
                   >
                     <td className="px-6 py-4 text-(--text) p-med">
-                      {item.date}
+                      {new Date(item.timestamp).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 text-(--text) p-med">
-                      {item.type}
+                      {item.entry_type === "donation" ? "Donación" : "Canje"}
                     </td>
                     <td className="px-6 py-4 text-(--text) p-med">
-                      {item.hospital}
+                      {item.hospital_name}
                     </td>
                     <td
                       className={`px-6 py-4 p-med ${
-                        item.isPositive ? "text-green-500" : "text-red-500"
+                        item.credits_change > 0 ? "text-green-500" : "text-red-500"
                       }`}
                     >
-                      {item.credits}
+                      {item.credits_change > 0 ? "+" : ""}{item.credits_change}
                     </td>
                   </tr>
                 ))}
@@ -92,21 +138,31 @@ export default function Dashboard() {
           <h4 className="text-2xl font-semibold mb-5">Hospital actual</h4>
           <div className="flex flex-col sm:flex-row gap-10 items-start sm:items-center">
             <Card
-              img={HistoryData[1].img}
-              body="Hospital Nacional Dos de Mayo"
-              footer="Av. Miguel Grau cdra. 13, Lima"
-            ></Card>
+              img="https://upload.wikimedia.org/wikipedia/commons/3/30/20180122_Dos_de_Mayo_03.jpg" // Hardcodeado por ahora
+              body={summary?.hospital_name || "Hospital desconocido"}
+              footer="Dirección no disponible" // Hardcodeado
+            />
 
             <div>
               <p className="p-bold mb-4">Cambio de hospital</p>
               <div className="flex gap-4 w-full sm:w-auto">
-                <select className="bg-(--bg) text-(--text) border border-(--bg-lighter) py-3 px-4 rounded-lg appearance-none cursor-pointer">
-                  <option disabled>Seleccionar hospital...</option>
-                  <option>Hospital Nacional Dos de Mayo</option>
-                  <option>Hospital Regional Cusco</option>
+                <select
+                  value={selectedHospital || ""}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedHospital(Number(e.target.value))}
+                  className="bg-(--bg) text-(--text) border border-(--bg-lighter) py-3 px-4 rounded-lg appearance-none cursor-pointer"
+                >
+                  <option disabled value="">Seleccionar hospital...</option>
+                  {hospitals.map((h: any) => (
+                    <option key={h.id} value={h.id}>
+                      {h.name}
+                    </option>
+                  ))}
                 </select>
 
-                <button className="bg-(--primary) hover:bg-(--primary-95) transition duration-300 p-3 rounded-full flex items-center justify-center w-12 h-12 ">
+                <button
+                  onClick={handleHospitalChange}
+                  className="bg-(--primary) hover:bg-(--primary-95) transition duration-300 p-3 rounded-full flex items-center justify-center w-12 h-12"
+                >
                   <i className="fa-solid fa-rotate-right"></i>
                 </button>
               </div>

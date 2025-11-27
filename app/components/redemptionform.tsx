@@ -1,39 +1,120 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { api } from "./api";
 
-const availableHospitals = [
-  {
-    id: 1,
-    name: "Hospital Nacional Arzobispo Loayza",
-    distance: 1.2,
-    cost: 180,
-  },
-  { id: 2, name: "Hospital Nacional Dos de Mayo", distance: 2.0, cost: 180 },
-  { id: 3, name: "Hospital Cayetano Heredia", distance: 3.5, cost: 180 },
-];
+// Mapear tipos de sangre a IDs (basado en seed)
+const bloodTypeMap: { [key: string]: number } = {
+  "O+": 1,
+  "O-": 2,
+  "A+": 3,
+  "A-": 4,
+  "B+": 5,
+  "B-": 6,
+  "AB+": 7,
+  "AB-": 8,
+};
+
+interface HospitalSuggestion {
+  hospital_id: number;
+  hospital_name: string;
+  distance_km: number;
+  available_volume_ml: number;
+}
 
 const RedemptionFlow = () => {
-  // Estados para el flujo de la aplicación
-  const [step, setStep] = useState(1); // 1: Formulario, 2: Resultados
-  const [bloodAmount, setBloodAmount] = useState("450"); // Valor por defecto para simular
-  const [bloodType, setBloodType] = useState("O+"); // Valor por defecto para simular
+  const [userId, setUserId] = useState<number>(1);
+  const [step, setStep] = useState(1); // 1: Formulario, 2: Resultados, 3: Confirmación
+  const [bloodAmount, setBloodAmount] = useState("450");
+  const [bloodType, setBloodType] = useState("O+");
   const [selectedHospital, setSelectedHospital] = useState<number | null>(null);
+  const [availableHospitals, setAvailableHospitals] = useState<HospitalSuggestion[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [cost, setCost] = useState<number>(0);
+  const [requestId, setRequestId] = useState<number | null>(null);
 
-  // Funciones de manejo
-  const handleConsult = (e: any) => {
+  useEffect(() => {
+    const id = parseInt(localStorage.getItem("user_id") || "1");
+    setUserId(id);
+  }, []);
+
+  const handleConsult = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Validación mínima: Aquí se enviaría la solicitud al backend
-    if (bloodAmount && bloodType) {
-      setStep(2);
-      setSelectedHospital(null); // Reiniciar selección al mostrar resultados
-    } else {
+    if (!bloodAmount || !bloodType) {
       alert("Por favor, ingresa la cantidad y el tipo de sangre.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const bloodTypeId = bloodTypeMap[bloodType];
+      if (!bloodTypeId) {
+        alert("Tipo de sangre inválido.");
+        return;
+      }
+      const nearest = await api.getNearestHospitals(
+        userId,
+        bloodTypeId,
+        parseInt(bloodAmount),
+        3
+      );
+      const suggestions = Array.isArray(nearest?.suggestions) ? nearest.suggestions : [];
+      setAvailableHospitals(suggestions);
+      setSelectedHospital(null);
+      console.log("Hospitales cercanos obtenidos:", suggestions.length);
+
+      // Evaluar costo usando evaluateFlow
+      const evalRes = await api.evaluateFlow({
+        user_id: userId,
+        blood_type_id: bloodTypeId,
+        required_volume_ml: parseInt(bloodAmount),
+      });
+      const estimatedCredits =
+        evalRes?.estimated_cost ?? 0;
+      setCost(estimatedCredits);
+
+      setStep(2);
+    } catch (error: any) {
+      console.error("Error consultando:", error);
+      alert(`Error al consultar disponibilidad: ${error.message || error}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateRequest = async () => {
+    if (!selectedHospital) return;
+    try {
+      const bloodTypeId = bloodTypeMap[bloodType];
+      const request = await api.createRequest({
+        user_id: userId,
+        blood_type_id: bloodTypeId,
+        volume_ml: parseInt(bloodAmount),
+      });
+      setRequestId(request.id);
+      setStep(3);
+    } catch (error) {
+      console.error("Error creando request:", error);
+      alert("Error creando solicitud.");
+    }
+  };
+
+  const handleConfirm = async () => {
+    if (!requestId || !selectedHospital) return;
+    try {
+      await api.confirmRequest(requestId, selectedHospital);
+      console.log("Canje confirmado para request ID:", requestId, "en hospital ID:", selectedHospital);
+      alert("Canje confirmado exitosamente!");
+      // Reset o redirigir
+      setStep(1);
+    } catch (error: any) {
+      console.error("Error confirmando:", error);
+      alert(`Error confirmando canje: ${error.message || error}`);
     }
   };
 
   const handleBack = () => {
-    setStep(1);
+    if (step === 3) setStep(2);
+    else setStep(1);
   };
 
   // ----------------------------------------------------
@@ -79,9 +160,11 @@ const RedemptionFlow = () => {
             <option value="" disabled>
               Selecciona tipo
             </option>
-            <option value="O+">O+</option>
-            <option value="A+">A+</option>
-            {/* ... más tipos */}
+            {Object.keys(bloodTypeMap).map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -89,9 +172,10 @@ const RedemptionFlow = () => {
         <div className="pt-6">
           <button
             type="submit"
-            className="w-full bg-(--primary) hover:bg-(--primary-95) text-(--text) font-medium py-3 rounded-lg transition duration-300 cursor-pointer shadow-s"
+            disabled={loading}
+            className="w-full bg-(--primary) hover:bg-(--primary-95) transition duration-300 p-3 rounded-lg cursor-pointer shadow-s"
           >
-            Consultar
+            {loading ? "Consultando..." : "Consultar"}
           </button>
         </div>
       </form>
@@ -139,7 +223,7 @@ const RedemptionFlow = () => {
             Resultados de disponibilidad en hospitales cercanos
           </h2>
           <p className="text-gray-400 text-sm">
-            Seleccione una de las tres opciones:
+            Seleccione una de las opciones disponibles:
           </p>
 
           <form>
@@ -147,11 +231,11 @@ const RedemptionFlow = () => {
             <div className="space-y-3">
               {availableHospitals.map((hospital) => (
                 <label
-                  key={hospital.id}
+                  key={hospital.hospital_id}
                   className="flex items-center justify-between bg-gray-800 p-4 rounded-lg cursor-pointer hover:bg-gray-700 transition duration-150"
                 >
                   <div className="flex items-center space-x-3">
-                    {/* Icono de Hospital (usando un SVG de placeholder) */}
+                    {/* Icono de Hospital */}
                     <svg
                       className="w-6 h-6 text-red-500"
                       fill="none"
@@ -169,10 +253,10 @@ const RedemptionFlow = () => {
 
                     <div>
                       <p className="font-semibold text-white">
-                        {hospital.name}
+                        {hospital.hospital_name}
                       </p>
                       <p className="text-xs text-gray-400">
-                        {hospital.distance} km
+                        {hospital.distance_km.toFixed(1)} km - {hospital.available_volume_ml} ml disponible
                       </p>
                     </div>
                   </div>
@@ -181,9 +265,9 @@ const RedemptionFlow = () => {
                   <input
                     type="radio"
                     name="hospitalSelection"
-                    value={hospital.id}
-                    checked={selectedHospital === hospital.id}
-                    onChange={() => setSelectedHospital(hospital.id)}
+                    value={hospital.hospital_id}
+                    checked={selectedHospital === hospital.hospital_id}
+                    onChange={() => setSelectedHospital(hospital.hospital_id)}
                     className="form-radio h-5 w-5 text-red-600 bg-gray-900 border-gray-600 focus:ring-red-500"
                   />
                 </label>
@@ -193,22 +277,20 @@ const RedemptionFlow = () => {
             {/* Costo y Botones de Acción */}
             <div className="mt-8 space-y-3">
               <p className="font-semibold text-lg">
-                Costo: <span className="text-red-500">180 créditos</span>
+                Costo estimado: <span className="text-red-500">{cost} créditos</span>
               </p>
 
               <button
                 type="button"
                 disabled={!selectedHospital}
+                onClick={handleCreateRequest}
                 className={`w-full text-white font-semibold py-3 rounded-lg transition duration-200 ${
                   selectedHospital
                     ? "bg-red-700 hover:bg-red-800"
                     : "bg-gray-600 cursor-not-allowed"
                 }`}
-                style={{
-                  backgroundColor: selectedHospital ? "#a81930" : undefined,
-                }}
               >
-                Continuar
+                Crear solicitud
               </button>
 
               <button
@@ -225,12 +307,42 @@ const RedemptionFlow = () => {
     </div>
   );
 
+  // ----------------------------------------------------
+  // VISTA 3: CONFIRMACIÓN
+  // ----------------------------------------------------
+  const ConfirmationView = () => (
+    <div className="space-y-6 max-w-2xl mx-auto">
+      <h2 className="text-3xl font-bold mb-8 text-center">Confirmar Canje</h2>
+      <div className="bg-gray-800 p-6 rounded-lg">
+        <p className="mb-4">
+          ¿Confirmar el canje de {bloodAmount} ml de {bloodType} en{" "}
+          {availableHospitals.find((h) => h.hospital_id === selectedHospital)?.hospital_name}?
+        </p>
+        <p className="text-red-500 font-semibold">Costo: {cost} créditos</p>
+      </div>
+      <div className="flex space-x-4">
+        <button
+          onClick={handleConfirm}
+          className="flex-1 bg-red-700 hover:bg-red-800 text-white font-semibold py-3 rounded-lg transition duration-200"
+        >
+          Confirmar
+        </button>
+        <button
+          onClick={handleBack}
+          className="flex-1 bg-transparent border border-gray-500 text-gray-400 font-semibold py-3 rounded-lg hover:bg-gray-700 transition duration-200"
+        >
+          Volver
+        </button>
+      </div>
+    </div>
+  );
+
   return (
-    // Contenedor principal para centrar la vista
     <div className="flex items-start justify-center bg-gray-900 text-white pt-14 px-6 sm:px-10">
       <div className="max-w-5xl pt-10">
         {step === 1 && <FormView />}
         {step === 2 && <ResultsView />}
+        {step === 3 && <ConfirmationView />}
       </div>
     </div>
   );
