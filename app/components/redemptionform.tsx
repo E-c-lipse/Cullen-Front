@@ -22,7 +22,7 @@ interface HospitalSuggestion {
   available_volume_ml: number;
 }
 
-const RedemptionFlow = () => {
+const RedemptionForm = () => {
   const [userId, setUserId] = useState<number>(1);
   const [step, setStep] = useState(1); // 1: Formulario, 2: Resultados, 3: Confirmación
   const [bloodAmount, setBloodAmount] = useState("450");
@@ -284,11 +284,10 @@ const RedemptionFlow = () => {
                 type="button"
                 disabled={!selectedHospital}
                 onClick={handleCreateRequest}
-                className={`w-full text-white font-semibold py-3 rounded-lg transition duration-200 ${
-                  selectedHospital
-                    ? "bg-red-700 hover:bg-red-800"
-                    : "bg-gray-600 cursor-not-allowed"
-                }`}
+                className={`w-full text-white font-semibold py-3 rounded-lg transition duration-200 ${selectedHospital
+                  ? "bg-red-700 hover:bg-red-800"
+                  : "bg-gray-600 cursor-not-allowed"
+                  }`}
               >
                 Crear solicitud
               </button>
@@ -340,12 +339,12 @@ const RedemptionFlow = () => {
   return (
     <div className="flex items-start justify-center bg-gray-900 text-white pt-14 px-6 sm:px-10">
       <div className="max-w-5xl pt-10">
-        {step === 1 && <FormView />}
-        {step === 2 && <ResultsView />}
-        {step === 3 && <ConfirmationView />}
+        {step === 1 && FormView()}
+        {step === 2 && ResultsView()}
+        {step === 3 && ConfirmationView()}
       </div>
     </div>
   );
 };
 
-export default RedemptionFlow;
+export default RedemptionForm;

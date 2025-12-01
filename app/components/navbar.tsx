@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 interface NavItem {
   label: string;
   to: string;
@@ -24,12 +26,12 @@ export default function Navbar() {
           >
             {items.map((item) => (
               <li key={item.to} className="py-2 md:py-0">
-                <a
+                <Link
                   href={item.to}
                   className={`font-bold duration-300 hover:text-(--primary)`}
                 >
                   {item.label}
-                </a>
+                </Link>
               </li>
             ))}
           </ul>

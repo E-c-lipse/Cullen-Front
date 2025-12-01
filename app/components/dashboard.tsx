@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Card from "./ui/card/card";
 import { api } from "./api";
+import { useAuth } from "../contexts/AuthContext";
 
 interface HistoryEntry {
   timestamp: string;
@@ -23,7 +24,7 @@ interface UserSummary {
 }
 
 export default function Dashboard() {
-  const [userId, setUserId] = useState<number>(1);
+  const { user } = useAuth(); // Get user from AuthContext
   const [summary, setSummary] = useState<UserSummary | null>(null);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,23 +32,18 @@ export default function Dashboard() {
   const [hospitals, setHospitals] = useState<any[]>([]);
 
   useEffect(() => {
-    const id = parseInt(localStorage.getItem("user_id") || "1");
-    setUserId(id);
-  }, []);
-
-  useEffect(() => {
-    if (userId === 1) return; // Wait for userId to be set
+    if (!user) return; // Wait for user to be loaded
     const loadData = async () => {
       try {
         const [summaryRes, historyRes, hospitalsRes] = await Promise.all([
-          api.getUserSummary(userId),
-          api.getUserHistory(userId, 10),
+          api.getUserSummary(user.id),
+          api.getUserHistory(user.id, 10),
           api.getHospitals(),
         ]);
         setSummary(summaryRes);
         setHistory(historyRes.entries);
         setHospitals(hospitalsRes);
-        console.log("Usuario cargado:", summaryRes.name); // Logging del nombre del usuario
+        console.log("Usuario cargado:", summaryRes.name);
       } catch (error) {
         console.error("Error loading dashboard data:", error);
       } finally {
@@ -55,15 +51,15 @@ export default function Dashboard() {
       }
     };
     loadData();
-  }, [userId]);
+  }, [user]);
 
   const handleHospitalChange = async () => {
-    if (!selectedHospital) return;
+    if (!selectedHospital || !user) return;
     try {
-      await api.updateUserHospital(userId, selectedHospital);
+      await api.updateUserHospital(user.id, selectedHospital);
       console.log("Hospital cambiado exitosamente a ID:", selectedHospital);
       // Recargar resumen
-      const summaryRes = await api.getUserSummary(userId);
+      const summaryRes = await api.getUserSummary(user.id);
       setSummary(summaryRes);
     } catch (error) {
       console.error("Error updating hospital:", error);
@@ -121,9 +117,8 @@ export default function Dashboard() {
                       {item.hospital_name}
                     </td>
                     <td
-                      className={`px-6 py-4 p-med ${
-                        item.credits_change > 0 ? "text-green-500" : "text-red-500"
-                      }`}
+                      className={`px-6 py-4 p-med ${item.credits_change > 0 ? "text-green-500" : "text-red-500"
+                        }`}
                     >
                       {item.credits_change > 0 ? "+" : ""}{item.credits_change}
                     </td>

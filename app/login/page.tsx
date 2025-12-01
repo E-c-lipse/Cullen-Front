@@ -3,11 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "../components/api";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function Login() {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -17,9 +19,8 @@ export default function Login() {
     }
     setLoading(true);
     try {
-      const user = await api.getUserByName(name.trim());
-      localStorage.setItem("user_id", user.id.toString());
-      localStorage.setItem("user_name", user.name);
+      const user = await api.login(name.trim());
+      login(user); // Use the login function from AuthContext
       router.push("/");
     } catch (error) {
       console.error("Error en login:", error);
@@ -33,7 +34,6 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white p-4">
       <div className="w-full max-w-md p-8 sm:p-10">
         <h2 className="text-3xl font-bold text-center mb-8">Iniciar Sesión</h2>
-
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-white mb-2">

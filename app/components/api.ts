@@ -1,3 +1,5 @@
+import { User } from "../model/user";
+
 const API_BASE = "http://localhost:8000";
 
 export const api = {
@@ -12,13 +14,13 @@ export const api = {
       throw error;
     }
   },
-  getUserByName: async (name: string) => {
+  login: async (name: string): Promise<User> => {
     try {
-      const res = await fetch(`${API_BASE}/users/by_name?name=${encodeURIComponent(name)}`);
+      const res = await fetch(`${API_BASE}/users/login?name=${encodeURIComponent(name)}`, { method: "POST" });
       if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
       return await res.json();
     } catch (error) {
-      console.error("Error en getUserByName:", error);
+      console.error("Error en login:", error);
       throw error;
     }
   },

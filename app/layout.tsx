@@ -2,19 +2,20 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "./components/navbar";
 import AuthGuard from "./components/AuthGuard";
+import { AuthProvider } from "./contexts/AuthContext";
 
 export const metadata: Metadata = {
   title: {
     template: "%s | Cullen",
     default: "Cullen | Aplicación de Donaciones de Sangre",
   },
-  
+
   // Descripción optimizada
   description: "Únete a Cullen, la aplicación de donaciones de sangre. Dona hoy y acumula créditos para canjear sangre cuando más lo necesites.",
-  
+
   // Palabras clave
   keywords: ["Cullen", "donación de sangre", "canjear sangre", "créditos de sangre", "banco de sangre"],
-  
+
   // Metadatos para redes sociales (Open Graph)
   openGraph: {
     title: "Cullen | Dona y Canjea Sangre",
@@ -41,8 +42,10 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <Navbar />
-        <AuthGuard>{children}</AuthGuard>
+        <AuthProvider>
+          <Navbar />
+          <AuthGuard>{children}</AuthGuard>
+        </AuthProvider>
       </body>
     </html>
   );

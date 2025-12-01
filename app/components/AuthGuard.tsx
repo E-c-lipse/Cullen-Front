@@ -1,22 +1,42 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
+  const pathname = usePathname();
+  const { user, loading } = useAuth();
 
   useEffect(() => {
-    const userId = localStorage.getItem("user_id");
-    if (!userId) {
-      router.push("/login");
-    } else {
-      setIsLoading(false);
+    // Don't protect the login route
+    if (pathname === "/login") {
+      return;
     }
-  }, [router]);
 
-  if (isLoading) return <div>Loading...</div>;
+    // Wait for auth to finish loading
+    if (loading) {
+      return;
+    }
+
+    // Redirect to login if not authenticated
+    if (!user) {
+      router.push("/login");
+    }
+  }, [user, loading, router, pathname]);
+
+  // Show loading state while checking authentication
+  if (loading && pathname !== "/login") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-700 mx-auto mb-4"></div>
+          <p className="text-gray-400">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
 
   return <>{children}</>;
 }
