@@ -1,6 +1,6 @@
 import { User } from "../model/user";
 
-const API_BASE = "http://localhost:8000";
+const API_BASE = "https://cullen-web-service.onrender.com";
 
 export const api = {
   // Users

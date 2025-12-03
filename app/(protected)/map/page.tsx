@@ -3,7 +3,7 @@ import { MSTResponse } from "./model/mst-response";
 
 export default async function Page() {
   const res = await fetch(
-    "http://localhost:8000/requests/mst?macro_region=Costa"
+    "https://cullen-web-service.onrender.com/requests/mst?macro_region=Costa"
   );
 
   if (!res.ok) {
