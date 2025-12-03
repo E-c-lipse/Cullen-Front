@@ -18,7 +18,7 @@ export default function MapWrapper({ hospitals, edges }: Props) {
 
     return (
         <div className="w-full h-[600px] rounded-2xl overflow-hidden border">
-            <LoadScript googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY!}>
+            <LoadScript googleMapsApiKey={process.env.GOOGLE_MAPS_API_KEY as string}>
                 <GoogleMap
                     mapContainerClassName="w-full h-full"
                     zoom={6}
