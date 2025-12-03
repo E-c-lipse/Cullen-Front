@@ -1,4 +1,4 @@
-import DonationForm from "../components/donationform";
+import DonationForm from "@/app/components/donationform";
 
 export default function Donate() {
   return (

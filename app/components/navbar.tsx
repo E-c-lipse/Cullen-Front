@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { useAuth } from "../auth/contexts/auth-context";
+import { LogOut } from "lucide-react";
 
 interface NavItem {
   label: string;
@@ -12,11 +14,13 @@ const items: NavItem[] = [
 ];
 
 export default function Navbar() {
+  const { logout } = useAuth();
+
   return (
     <nav className="fixed flex w-full justify-center p-2 bg-(--bg-dark) z-50 text-(--text) border-b border-b-(--bg-lighter) shadow-s">
       <div className="flex w-full items-center justify-between max-w-280 mx-4">
         <div className="flex items-center gap-3">
-          <i className="text-(--primary) fa-solid fa-droplet"></i>
+          <i className="text-red-700 fa-solid fa-droplet"></i>
           <h4>Cullen</h4>
         </div>
         <div className="flex items-center">
@@ -28,37 +32,17 @@ export default function Navbar() {
               <li key={item.to} className="py-2 md:py-0">
                 <Link
                   href={item.to}
-                  className={`font-bold duration-300 hover:text-(--primary)`}
+                  className={`font-bold duration-300 hover:text-red-700`}
                 >
                   {item.label}
                 </Link>
               </li>
             ))}
           </ul>
-          <div className="flex items-center gap-4 md:gap-8">
-            <button
-              id="menu-btn"
-              className="md:hidden transition-all duration-300"
-            >
-              <svg
-                className="md:hidden"
-                xmlns="http://www.w3.org/2000/svg"
-                width="32"
-                height="32"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                <path d="M4 6l16 0"></path>
-                <path d="M4 12l16 0"></path>
-                <path d="M4 18l16 0"></path>
-              </svg>
-            </button>
-          </div>
+          <button className="bg-red-700 hover:bg-red-600 flex items-center gap-2 px-5 py-1.5 rounded-md ml-6 cursor-pointer transition duration-300" onClick={logout}>
+            <LogOut size={18} />
+            <span className="font-medium text-(--text)">Cerrar sesión</span>
+          </button>
         </div>
       </div>
     </nav>

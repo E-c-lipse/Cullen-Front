@@ -1,4 +1,4 @@
-import RedemptionForm from "../components/redemptionform";
+import RedemptionForm from "../../components/redemptionform";
 
 export default function Redeem() {
   return (

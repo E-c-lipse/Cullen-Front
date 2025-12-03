@@ -28,7 +28,9 @@ const RedemptionForm = () => {
   const [bloodAmount, setBloodAmount] = useState("450");
   const [bloodType, setBloodType] = useState("O+");
   const [selectedHospital, setSelectedHospital] = useState<number | null>(null);
-  const [availableHospitals, setAvailableHospitals] = useState<HospitalSuggestion[]>([]);
+  const [availableHospitals, setAvailableHospitals] = useState<
+    HospitalSuggestion[]
+  >([]);
   const [loading, setLoading] = useState(false);
   const [cost, setCost] = useState<number>(0);
   const [requestId, setRequestId] = useState<number | null>(null);
@@ -57,7 +59,9 @@ const RedemptionForm = () => {
         parseInt(bloodAmount),
         3
       );
-      const suggestions = Array.isArray(nearest?.suggestions) ? nearest.suggestions : [];
+      const suggestions = Array.isArray(nearest?.suggestions)
+        ? nearest.suggestions
+        : [];
       setAvailableHospitals(suggestions);
       setSelectedHospital(null);
       console.log("Hospitales cercanos obtenidos:", suggestions.length);
@@ -68,8 +72,7 @@ const RedemptionForm = () => {
         blood_type_id: bloodTypeId,
         required_volume_ml: parseInt(bloodAmount),
       });
-      const estimatedCredits =
-        evalRes?.estimated_cost ?? 0;
+      const estimatedCredits = evalRes?.estimated_cost ?? 0;
       setCost(estimatedCredits);
 
       setStep(2);
@@ -102,7 +105,12 @@ const RedemptionForm = () => {
     if (!requestId || !selectedHospital) return;
     try {
       await api.confirmRequest(requestId, selectedHospital);
-      console.log("Canje confirmado para request ID:", requestId, "en hospital ID:", selectedHospital);
+      console.log(
+        "Canje confirmado para request ID:",
+        requestId,
+        "en hospital ID:",
+        selectedHospital
+      );
       alert("Canje confirmado exitosamente!");
       // Reset o redirigir
       setStep(1);
@@ -169,13 +177,13 @@ const RedemptionForm = () => {
         </div>
 
         {/* Botón Consultar */}
-        <div className="pt-6">
+        <div className="pt-4">
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-(--primary) hover:bg-(--primary-95) transition duration-300 p-3 rounded-lg cursor-pointer shadow-s"
+            className="w-full bg-red-700 hover:bg-red-600 transition duration-300 p-3 rounded-lg cursor-pointer shadow-s"
           >
-            {loading ? "Consultando..." : "Consultar"}
+            <p>{loading ? "Consultando..." : "Consultar"}</p>
           </button>
         </div>
       </form>
@@ -256,7 +264,8 @@ const RedemptionForm = () => {
                         {hospital.hospital_name}
                       </p>
                       <p className="text-xs text-gray-400">
-                        {hospital.distance_km.toFixed(1)} km - {hospital.available_volume_ml} ml disponible
+                        {hospital.distance_km.toFixed(1)} km -{" "}
+                        {hospital.available_volume_ml} ml disponible
                       </p>
                     </div>
                   </div>
@@ -277,17 +286,19 @@ const RedemptionForm = () => {
             {/* Costo y Botones de Acción */}
             <div className="mt-8 space-y-3">
               <p className="font-semibold text-lg">
-                Costo estimado: <span className="text-red-500">{cost} créditos</span>
+                Costo estimado:{" "}
+                <span className="text-red-500">{cost} créditos</span>
               </p>
 
               <button
                 type="button"
                 disabled={!selectedHospital}
                 onClick={handleCreateRequest}
-                className={`w-full text-white font-semibold py-3 rounded-lg transition duration-200 ${selectedHospital
-                  ? "bg-red-700 hover:bg-red-800"
-                  : "bg-gray-600 cursor-not-allowed"
-                  }`}
+                className={`w-full text-white font-semibold py-3 rounded-lg transition duration-200 ${
+                  selectedHospital
+                    ? "bg-red-700 hover:bg-red-800"
+                    : "bg-gray-600 cursor-not-allowed"
+                }`}
               >
                 Crear solicitud
               </button>
@@ -315,7 +326,11 @@ const RedemptionForm = () => {
       <div className="bg-gray-800 p-6 rounded-lg">
         <p className="mb-4">
           ¿Confirmar el canje de {bloodAmount} ml de {bloodType} en{" "}
-          {availableHospitals.find((h) => h.hospital_id === selectedHospital)?.hospital_name}?
+          {
+            availableHospitals.find((h) => h.hospital_id === selectedHospital)
+              ?.hospital_name
+          }
+          ?
         </p>
         <p className="text-red-500 font-semibold">Costo: {cost} créditos</p>
       </div>
@@ -337,7 +352,7 @@ const RedemptionForm = () => {
   );
 
   return (
-    <div className="flex items-start justify-center bg-gray-900 text-white pt-14 px-6 sm:px-10">
+    <div className="flex items-start justify-center bg-(--bg-dark) text-(--text) pt-14 px-6 sm:px-10">
       <div className="max-w-5xl pt-10">
         {step === 1 && FormView()}
         {step === 2 && ResultsView()}

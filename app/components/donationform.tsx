@@ -80,7 +80,7 @@ export default function DonationForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white p-4">
+    <div className="flex items-center justify-center bg-(--bg-dark) text-(--text) p-4">
       <div className="w-full max-w-md p-8 sm:p-10">
         <h2 className="text-3xl font-bold text-center mb-8">
           Registrar donación
@@ -102,7 +102,7 @@ export default function DonationForm() {
               onChange={(e) => setBloodAmount(e.target.value)}
               placeholder=""
               required
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-white placeholder-gray-500 focus:ring-red-500 focus:border-red-500 transition duration-150"
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-white placeholder-gray-500 transition duration-300"
             />
           </div>
 
@@ -119,7 +119,7 @@ export default function DonationForm() {
               value={bloodType}
               onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setBloodType(e.target.value)}
               required
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-white appearance-none pr-10 focus:ring-red-500 focus:border-red-500 cursor-pointer transition duration-150"
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-white appearance-none pr-10 cursor-pointer transition duration-300"
             >
               <option value="" disabled>
                 Selecciona tipo
@@ -146,7 +146,7 @@ export default function DonationForm() {
                 value={hospital}
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setHospital(e.target.value)}
                 required
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-white appearance-none pr-10 focus:ring-red-500 focus:border-red-500 cursor-pointer transition duration-150"
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-white appearance-none pr-10 cursor-pointer transition duration-300"
               >
                 <option value="" disabled>
                   Selecciona un hospital
@@ -190,7 +190,7 @@ export default function DonationForm() {
               onChange={(e) => setConfirmationCode(e.target.value)}
               placeholder=""
               required
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-white placeholder-gray-500 focus:ring-red-500 focus:border-red-500 transition duration-150"
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-white placeholder-gray-500 transition duration-300"
             />
           </div>
 
@@ -199,11 +199,7 @@ export default function DonationForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-red-700 hover:bg-red-800 text-white font-semibold py-3 rounded-lg shadow-lg transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 focus:ring-offset-gray-900"
-              style={{
-                backgroundColor: "#a81930",
-                boxShadow: "0 4px 10px rgba(168, 25, 48, 0.4)",
-              }}
+              className="w-full bg-red-700 hover:bg-red-600 text-white font-semibold py-3 rounded-lg shadow-lg transition duration-300 cursor-pointer"
             >
               {loading ? "Registrando..." : "Registrar Donación"}
             </button>
